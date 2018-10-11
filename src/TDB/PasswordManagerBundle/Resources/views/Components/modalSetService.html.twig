@@ -1,0 +1,27 @@
+<!-- Modal -->
+<div class="modal" id="modal-set-service" tabindex="-1" role="dialog" aria-labelledby="modif-service" aria-hidden="true">
+  <div class="modal-dialog">					
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">				        
+        <h4 class="modal-title" id="modif-service">Modification d'un service</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <form id="form-modal-set-service" method="POST" action="#" data-service="#">	
+      	<div class="modal-body">							
+					<div class="form-group row m-auto">											
+						<input class="form-control form-control-sm" id="service-nom" name="nom" type="text" value="">										
+					</div>
+      	</div>											
+	      <div class="modal-footer">
+		      <button class="btn btn-danger" data-dismiss="modal" type="button">Annuler</button>
+	        <button
+	        class="btn btn-success bouton-confirm"  
+	        name="service"
+	        data-id="" 
+	        type="submit">Valider</button>
+	      </div>	   
+      </form>	   
+    </div>				
+  </div>
+</div><!-- fin Modal !-->

@@ -1,0 +1,256 @@
+$(document).ready(function(){	
+	/*
+	 * Initialisation.
+	 */
+	// Initilisation liste de toutes les entrées, affichage par défault en page d'accueil.
+	showListEntrees();
+		
+	//----------------------------------- Entrée ------------------------------------------//
+	/*
+	 * @description : Appel la fonction qui recherche les entrées en fonction de la saisie effectuée.
+	 */
+	$("#form_recherche_envoyer").on('click', function(e){	
+        e.preventDefault(); 
+        // On verifie que l'entrée précédente qui peut être affichée a ses notes sauvegardées avant de supprimer sa vue.
+        if(removeDetailEntree()){
+            // On recherche les entrées en fonction de la saisie effectuée.
+            findJavascriptEntrees($("#form_recherche_recherche").val());
+		}
+	});		
+	/*
+	 * @description : Annuler une recherche, renvoie la totalité des entrées.
+	 */
+	$('#bouton-annul-recherche').on('click', function (e) {
+        e.preventDefault();
+        // On verifie que l'entrée précédente qui peut être affichée a ses notes sauvegardées avant de supprimer sa vue.
+        // if(removeDetailEntree()){
+            // On recherche toute les entrées.
+            findJavascriptEntrees('');
+		// }	
+	});	
+	/*
+	 * description : Ajout et affichage d'une entrée dans la liste des entrées ainsi que le detail de celle ci.
+	 * 
+	 */ 
+	$('#form_entree').on('submit', function(e) {
+        e.preventDefault();
+        // On verifie que l'entrée précédente qui peut être affichée a ses notes sauvegardées avant de supprimer sa vue.
+        if(removeDetailEntree()){
+			// On vérifie que le champ n'est pas vide sinon on n'envoie pas la requête.
+			var $this = $(this);
+			if($this.find('input').val() == ""){			
+				$('#modal-info span').text("Vous devez renseigner une entrée !");
+				$('#modal-info').modal('show'); 
+				$('#modal-info .modal-footer').hide();			
+			}else{
+				// On essaye de créer l'entrée.
+				createEntree($this);			
+			}			  
+	    } 
+	});	
+	/*
+	 * @description : Affichage de la liste des entrées en vue smartphone
+	 */		
+	$('header').on('click', '#bouton-retour-recherche', function(e){
+        // On verifie que l'entrée précédente qui peut être affichée a ses notes sauvegardées avant de quitter sa vue.
+        if(removeDetailEntree()){
+			// On affiche la liste des entrées.	
+			$('body').removeClass('vue-small-detail');		 
+			// On scroll jusqu'à l'entrée selectionnée.
+			$('body').scrollTo("#resultat .entree-item .active", 500, {offset : {top : -99} });
+		}
+	})		
+	/*
+	 * @description : Affichage du détail de l'entrée selectionnée.
+	 */		
+	$("#resultat").on('click', '.lien-detail-entree', function(e){			
+        e.preventDefault();
+        // On affiche le detail des entrées.		
+        $('body').addClass('vue-small-detail');
+        var $this = $(this);
+        // Variable qui determine la taille de l'écran en px.
+        var windowSize = $(window).width();
+        // On remonte au debut du détail de l'entrée.
+		if(windowSize < 768){
+			$('body').scrollTo(0, 100);
+		}else{		  
+			$('.passwords-detail').scrollTo(0, 100);	
+		}
+        // On verifie que l'entrée précédente qui peut être affichée a ses notes sauvegardées avant de supprimer sa vue.
+        if(removeDetailEntree()){
+            loadDetailEntree($this.attr('data-id'));  
+        }							 
+		// Annule le click sur le lien.	
+		return false;	
+	});		
+	/*
+	 * @description : Retour en haut de page pour le detail des entrees.
+	 */
+	$(".bouton-retour-haut").on('click', function(e){	
+		// Variable qui determine la taille de l'écran en px.
+		var windowSize = $(window).width();
+		if(windowSize < 768){
+			$('body').scrollTo(0, 100);
+		}else{		  
+			$('.passwords-detail').scrollTo(0, 100);	
+		}
+	});
+	//------------------------------ Service -----------------------------------------------//  
+	/*
+	 * description : Requête Ajax, ajout et affichage d'un service :
+	 */
+	$('#form_service').on('submit', function(e) {
+        e.preventDefault();
+        // On verifie que l'entrée précédente qui peut être affichée a ses notes sauvegardées avant de supprimer sa vue.
+        if(removeDetailEntree()){
+			var $this = $(this);
+			var value = $this.find('input').val();
+			var id    = $this.attr('data-id');
+			// On vérifie qu'on a bien renseigné un nom sinon on envoie pas la requête ajax.
+			if( value == ""){
+				$('#modal-info span').text("Vous devez renseigner un service !");
+				$('#modal-info').modal('show');
+				$('#modal-info .modal-footer').hide();
+			}else{
+				createService($this, id);
+			}	
+		} 	
+	}); 
+	//-----------------------------  Acces ------------------------------------------------//
+	/*
+	 * @description : Ajout/modification d'un accès : paramétrage de la modale lors de son affichage.
+	 */
+	$('#modal-set-acces').on('shown.bs.modal', function (event) {
+        // Rafraichissement du formulaire de la modale.
+        $('#form_Acces')[0].reset();
+        var modal     = $(this);	
+        var button    = $(event.relatedTarget); 
+        var titre     = button.attr('data-title');
+        var direction = button.attr('data-action');
+        var clef      = button.attr('data-clef');
+        var valeur    = button.attr('data-valeur'); 
+
+        modal.find('.modal-title').text(titre);
+        modal.find('#form_Acces_clef').attr('value', clef);
+        modal.find('#form_Acces_valeur').attr('value', valeur);
+        modal.find('form').attr({ action : direction});
+        modal.find('input:first').trigger('focus');
+	});
+	/*
+	 * description : Ajout/modification d'un accès et affichage :
+	 * 
+	 */	 
+	$("#form_Acces").on('submit',function(e) {
+        e.preventDefault();
+        // On vérifie qu'on a bien remplie les champs.
+        if($(this).find('input[name=clef]').val() == ""){
+            $("#modal-set-acces h4").text("Vous devez renseigner une clé !");    
+        }else if($(this).find('input[name=valeur]').val() == ""){
+            $("#modal-set-acces h4").text("Vous devez renseigner une valeur !"); 
+        }
+        else{    
+            // On passe à setAcces, le formulaire et le lien url en parametre. 	    
+        	setAcces($(this), $(this).attr('action'));
+        }
+	}); 
+	/*
+	 * description : Selection du champ et stockage dans le presse papier.
+	 * 
+	 */
+	$("#entree").on('click', '.input-acces', function(e){
+		// On créé une balise textarea dont on va se servir pour copier la valeur.
+		var $textarea = $( '<textarea>' );
+		// On l'ajoute au DOM.
+		$( 'body' ).append( $textarea );
+		// On injecte la valeur dans le textarea et on selectionne cette valeur
+		$textarea.val( $(this).val() ).select();
+		document.execCommand( 'copy' );
+		$textarea.remove();
+		// On affiche un message signalant que le champ est copié.
+		var smallCopie = $(this).parents('.acces').find('small');
+		smallCopie.css('color', 'black');
+		setTimeout(function() {smallCopie.css('color', 'white')}, 600);
+	});
+	//------------------------------- Notes ----------------------------------------------// 
+	/*
+	 * description : sauvegarde des notes à la validation dans la modale.
+	 */		
+	$('#modal-info .modal-content').on('click','.bouton-confirm', function(e){
+		$('#modal-info').modal('hide');
+		$('#modal-info .modal-footer').hide();
+		// Sauvegarde les notes.
+		saveNotes();
+	}); 
+	/*
+	 * description : Modification des notes, change l'état du formulaire d'envoie des notes quand des notes sont tapées.
+	 */	
+	$('#form-notes').on('keypress', function(e) {
+		$(this).children('span').html('unsaved');
+		$(this).children('button').removeClass('btn-success');
+		$(this).children('button').addClass('btn-info');
+	});
+	/*
+	 * description : sauvegarde des notes au click sur le bouton submit.
+	 */		
+	$('#form-notes').on('click', '.bouton-modif-notes', function(e){
+		e.preventDefault();
+		saveNotes();
+	});
+	/*
+	 * description : annulation de la modification des notes
+	 */		
+	$('#modal-info .modal-content').on('click','.bouton-annul', function(e){
+		$('#modal-info').modal('hide');
+		$('#form-notes').children('span').text('saved');
+		$('#form-notes').children('button').removeClass('btn-info');
+		$('#form-notes').children('button').addClass('btn-success');
+		// On affiche dans la zone de texte les notes avant modification.		
+		// $('.notes-card textarea').val(detail_entree.notes);
+	});
+	//-----------------------------Modale suppression-----------------------------------------------//
+	/*
+	 * @description : Supprimer une entitée : personnalisation de la modale de suppression en fonction de l'entitée à supprimer.
+	 */
+	$('#modal-suppression').on('show.bs.modal', function (event) {
+        // On transmet à la modale les datas que le bouton d'ouverture de la modale possède.
+        var button = $(event.relatedTarget); 
+        var url    = button.attr('data-href');
+        var title  = button.attr('data-title');
+        var body   = button.attr('data-body');
+        var id     = button.attr('data-id');
+        var type   = button.attr('data-type');
+        var nom    = button.attr('data-nom'); 
+        var modal  = $(this);
+        modal.find('a').attr({  'href'      : url,
+    							'data-id'   : id,
+    							'data-nom'  : nom,													 
+    							'data-type' : type });
+        modal.find('.modal-title').text(title);
+        modal.find('.modal-body').text(body);
+	});
+	//------------------------------- Suppression entité ----------------------------------------------//  
+	/*
+	 * description : Appel de la fonction qui supprime une entitée :
+	 * 
+	 */
+	$('#modal-suppression').on('click', '.bouton-confirm', function(){
+		// On récupère les infos du bouton de validation de la modale.
+		var url = $(this).attr('href');
+		var id = $(this).attr('data-id');
+		var nom = $(this).attr('data-nom');
+		var type = $(this).attr('data-type');
+		// On envoie la requête.
+		deleteEntitee(url, id, nom, type);
+		// Annule le click sur le lien.	  	
+  	return false;	
+	});
+	
+	//------------------------------- Modale erreur----------------------------------------------//  
+	/*
+	 * description : Ferme la modale d'erreur par touche clavier.
+	 * 
+	 */ 	
+	$('#modal-info').on('keypress', function(e){
+		$(this).modal('hide');
+	}); 			
+});

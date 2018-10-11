@@ -1,0 +1,130 @@
+{% extends "TDBPasswordManagerBundle:Entree:entrees.html.twig" %}
+
+{% block detail %}
+<div class="col-md-6 passwords-detail">
+	<div class="colonne">
+		<div class="loader" id="loader-detail"></div>
+		<div 
+			id="entree" 
+			data-id=""
+		>
+			<!-- titre entree !-->
+			<div class="shadow mb-4 bg-white">
+				<div class="list-group-item text-center nomEntree"><!-- nom de l'entrée --></div>
+			</div>
+			<div id="liste-services">		
+				<!-- debut card !-->	
+				<div class="shadow mb-4 bg-white service-card" data-id="first">
+					<div class="card-header p-2 d-flex justify-content-between">
+						<div class="col p-0 d-flex justify-content-start">
+							<h5><!-- Gabrait service --></h5>
+						</div>
+						<div class="col p-0 d-flex justify-content-end">
+							<button 
+								class="btn btn-primary mr-1 bouton-ajout-acces" 
+								type="button" 
+								data-toggle="modal" 
+								data-target="#modal-set-acces"
+								data-title="Ajout d'un accès" 
+								data-action="{{ path('tdb_password_manager_addAcces') }}"
+								data-clef=""
+								data-valeur=""
+								data-service="id du service"
+							>
+								<i class="fas fa-plus"></i>
+							</button>
+					    <button
+								class="btn btn-danger bouton-suppression-service" 
+								type="button" 
+								data-toggle="modal" 
+								data-target="#modal-suppression"
+								data-href="{{ path('tdb_password_manager_deleteService') }}" 
+								data-title="Suppression du service" 
+								data-body="Etes-vous sûr de vouloir supprimer le service ?"	
+								data-id="#"
+								data-nom="#"
+								data-type="service"				
+							>
+					    	<i class="fas fa-times"></i>
+					    </button>
+						</div>
+					</div>
+					<!-- debut card body !-->
+					<div class="card-body">							
+						<!-- debut acces !-->
+						<div class="form-group acces m-0">		
+						  <!-- clef !-->
+						  <div class="row">
+						  	<label for="valeurAcces" class="col col-form-label"></label>
+						  </div>
+						  <form id="form-acces" class="mb-0" method="POST" action="">
+						  	<div class="row m-0">	
+							  	<div class="input-group">				  
+										<input type="text" class="form-control input-acces text-center bg-white rounded-left" id="valeurAcces" name="valeurAcces" value="">														
+										<!-- bouton modif !-->	  
+									  <div class="input-group-append">
+									    <button 
+										    class="btn btn-success bouton-modif-acces" 
+										    type="button"
+												data-toggle="modal" 
+												data-target="#modal-set-acces"
+												data-title ="modification de l'accès"
+												data-action="{{ path('tdb_password_manager_editAcces') }}"
+												data-clef="clefAcces"
+												data-valeur="valeurAcces"
+											>
+									    	<i class="fas fa-pencil-alt"></i>
+									    </button>
+									  </div>				  
+									  <!-- bouton suppression !-->
+									  <div class="input-group-append">
+									    <button 
+										    class="btn btn-danger bouton-suppression-acces" 
+										    type="button" 
+										    data-id="id de l'accès"
+										    data-servid="id du service associé"
+										    data-toggle="modal" 
+										    data-target="#modal-suppression" 
+												data-href="{{ path('tdb_password_manager_deleteAcces') }}" 
+												data-title="Suppression de l'accès : " 
+												data-body="Etes-vous sûr de vouloir supprimer l'accès ?"
+												data-type="acces"					
+											>					     
+									    	<i class="fas fa-times"></i>
+									    </button>
+									  </div>				  
+						  		</div><!-- fin input-group !-->	
+								</div><!-- fin row !-->
+						  </form>
+						  <div class="row m-0">
+							  <small class="small-clipboard small-presse-papier">Copié dans le presse papier</small>		
+						  </div>
+						</div>	<!-- fin acces !-->	
+							  						
+					</div><!-- fin card-body!-->	
+				</div><!-- fin card !-->
+			</div>
+			<!-- debut card !-->	
+			<div class="shadow mb-4 bg-white notes-card">
+				<div class="card-header m-auto">
+					<label for="notes"><h5>Notes :</h5></label>
+				</div>
+				<div class="card-body pb-5">
+					{# <form id="form-notes" method="POST" action ="" data-action="{{ path('tdb_password_manager_editNotes') }}">	 #}
+      				{{ form_start(form_notes, {'action': '#', 'attr': {'data-action': path('tdb_password_manager_editNotes'), 'id' : 'form-notes'}}) }}  
+						  {# <textarea class="form-control" rows="4" id="notes" name="notes"></textarea> #}
+						{{ form_widget(form_notes.notes, {'attr': {
+				      	'class': 'form-control',
+				      	'id' : 'notes',
+				  		'rows' : '4'}
+				  		}) }}
+						  <span>saved</span>
+						  <button class="btn btn-success float-right mt-2 bouton-modif-notes" name="envoie_notes" type="submit"><i class="fas fa-check"></i></button>				
+					{# </form>																						 #}
+			      	{{ form_end(form_notes) }}  									
+				</div><!-- fin card-body!-->
+			</div><!-- fin card !-->									
+		</div><!-- fin entree !-->
+	 </div><!-- fin colonne !-->
+</div><!-- fin passwords-detail !-->
+{% endblock %}

@@ -1,0 +1,827 @@
+// Tableaux qui récupèrent les objets entrées trouvés lors d'une recherche.
+var all_entries	= []; 
+var show_entries	= []; 
+
+// Récupération des informations stocké.
+var all_entries_storage	=	localStorage.getItem('all_entries');
+if(all_entries_storage != null){
+	all_entries = all_entries_storage;
+}
+
+//------------------ Fonctions ---------------------------------------//
+
+/*
+ * rechercher
+ * @description : Recherche une chaîne de caractère dans une liste d'entrées et enregistre les resultats dans un tableau.
+ * @param search : Chaîne de caractères qui correspond à la recherche.
+ * @param entries : Objet qui contient des objets d'entrée. 
+ */
+function rechercher(search, entries){
+	var matchedEntries 	=		[];
+	Object.values(entries).forEach(function(entry){
+		var matched = matchSearch(search, entry);
+		if(matched){
+			matchedEntries.push(entry);
+		}
+	});
+	return matchedEntries;
+}
+//-----------------------------------------------------------------------------//
+/*
+ * matchSearch
+ * @description : Recherche une chaîne de caractère dans une entrée de façon récursive.
+ * @param search : Chaîne de caractères qui correspond à la recherche.
+ * @param entry :  Objet qui contient l'entrée.
+ */
+function matchSearch(search, entry){
+	// Entrée nom.
+	if( contains(entry['entree_nom'], search) ){
+		return true;
+	}
+	
+	// Services :
+	var services = Object.values(entry.services); 
+	for( i = 0; i < services.length; i++){
+		
+		// Service nom.
+		if( contains(services[i]['service_nom'], search) ){
+			return true;
+		}
+		
+		// Accès : 
+		var access = Object.values(services[i].access);
+		for( j = 0; j < access.length; j++){
+			
+			
+			// Accès clef.
+			if( contains(access[j]['clef'], search) ){
+				return true;
+			}
+			
+			// Accès valeur.
+			if( contains(access[j]['valeur'], search)  ){
+				return true;
+			}
+			
+		}; // fin each acces
+		
+		
+	}; // fin each service
+	
+	return false;
+	
+}
+
+//-----------------------------------------------------------------------------//
+/*
+ * contains
+ * @description : Indique si oui un non une chaîne de caractère contient la seconde passée en paramètre.
+ * @param string : Chaîne de caractère, correspond à l'attribut d'une entitée.
+ * @param needle :  Chaîne de caractère, correspond à la recherche de l'utilisateur.
+ */
+function contains(string, needle){
+	if(string != null){
+		if(string.toLowerCase().includes(needle.toLowerCase())){
+			return true;
+		}else{
+			return false;
+		}
+	}else{
+		return false;
+	}
+	//return string.toLowerCase().includes(needle.toLowerCase());
+}
+//-----------------------------------------------------------------------------//
+/*
+ * sortBy
+ * @description : Transforme en tableau et trie des objets par order alphabétique.
+ * @param objects : liste d'entrées
+ * @param field : nom du champ à trier.
+ * @param asc : 
+ */
+function sortBy(objects, field, asc = true){
+	// Si c'est pas un array.
+	if( ! Array.isArray(objects) ){
+		// On en fait un array.
+		objects	=	Object.values(objects);
+	}
+	// On trie l'array.
+	objects.sort(
+		function(a, b){
+			var compareValue	=	a[field].localeCompare(b[field]);
+			if(asc){
+				return compareValue / Math.abs(compareValue);
+			}else{
+				return (compareValue / Math.abs(compareValue)) * -1;
+			}
+		}
+	);
+	return objects;
+}
+//-----------------------------------------------------------------------------//
+/*
+ * showListEntrees
+ * @description : Fonction qui récupère toutes les entrées.
+ * @param recherche : string, recherche soumise.
+ */
+function showListEntrees(){
+	// On cache la vue de l'entrée qui a pu être affichée précédemment.
+	$('#entree').hide();
+	// On cache la liste des entrées.
+	$('#resultat').hide();
+	// On affiche une icone de chargement.
+	$('#loader-entrees').show();
+	// On envoie la requête ajax
+	return getAllEntrees(); 
+}
+//-----------------------------------------------------------------------------//
+/*
+ * getListEntrees
+ * @description : Fonction qui demande au serveur toutes les entrées.
+ * @param recherche : string, recherche soumise.
+ */
+function getAllEntrees(){
+	var url = $("#form_recherche_envoyer").attr('action');
+// Requête qui va disparaître, on ira faire la recherche dans l'objet "all_entries".
+return $.ajax({
+		url : url,
+		type : 'POST',
+		dataType : 'json',  
+	}).done(function(entrees){
+		if(entrees == null){
+			$('header .nb-entrees').text("0 entrées dans la base");	
+			// On cache l'icone de chargement.
+			$('#loader-entrees').hide();
+		}else{
+			// Un attribut services ou access vide sera retourné comme un tableau vide, on ne veut manipuler que des objets, on transforme ces tableaux en objet.
+			$.each(entrees, function(index, entree){
+				if( Array.isArray(entree.services)){
+					entree.services = {};
+				}
+				$.each(entree.services, function(index, service){
+					if( Array.isArray(service.access)){
+						service.access = {};
+					}			
+				});
+			});	
+		// Pour l'instant all_entries recupère les entrées trouvées.
+		all_entries = entrees;
+		// On stock les entrées en localStorage
+		localStorage.setItem('all_entries', all_entries);				  
+    	}   
+	}).fail(function(){
+		flashMessage("Les données n'ont pu être mise à jour à cause d'un problème de connexion.");
+	})
+	.always(function(){
+		// On va montrer toute les entrées trouvées.
+		show_entries =	all_entries;
+		// On vide la div qui va contenir la liste des resultats.
+	    $('#resultat').empty();
+	    // On trie les entrées par ordre alphabétique
+	    show_entries = sortBy(show_entries, 'entree_nom');
+		// On construit la liste des entrées trouvées
+	    loadListEntrees(show_entries);    
+	})
+	;
+}
+//-----------------------------------------------------------------------------//
+/*
+ * findJavascriptEntrees
+ * @description : Fonction qui recherche des entrées dans un tableau javascript
+ * @param recherche : string, recherche soumise.
+ */
+function findJavascriptEntrees(recherche){
+	// On cache la vue de l'entrée qui a pu être affichée précédemment.
+	$('#entree').hide();
+	// On cache la liste des entrées.
+	$('#resultat').hide();
+	// On affiche une icone de chargement.
+	$('#loader-entrees').show();
+
+ 		// Filtre de recherche.
+		recherche =	recherche.trim();
+
+		if(recherche != ''){
+			show_entries	=		rechercher(recherche, all_entries);
+		}else{
+			show_entries	=		all_entries;
+		}	
+		if(show_entries == ''){
+			$('header .nb-entrees').text("0 entrées trouvées");
+			// On affiche la vue de l'entrée qui a pu être affichée précédemment.
+			if($('#entree').attr('data-id') != ''){
+				$('#entree').show();
+			}
+			// On aficche la liste des entrées précédente.
+			$('#resultat').show();
+			// On cache l'icone de chargement.
+			$('#loader-entrees').hide();
+		}else{
+			// On vide la div qui va contenir la liste des resultats.
+			$('#resultat').empty();
+			// On trie les entrées par ordre alphabétique
+			show_entries = sortBy(show_entries, 'entree_nom');
+			// On construit la liste des entrées trouvées
+			loadListEntrees(show_entries); 
+    	}
+}
+//-----------------------------------------------------------------------------//
+/*
+ * loadListEntrees
+ * @description : Fonction qui contruit la liste des entrées
+ * @param entrees : tableau d'objets entree.
+ */
+function loadListEntrees(entrees){
+  // On construit la liste
+  $.each(entrees, function(index, entree){
+	  // On construit une entrée.
+		loadEntree(entree);
+	});	
+   // On affiche la liste construite.
+  $('#resultat').show();
+  var setSize	=	Object.keys(show_entries).length;
+	// On affiche le nombre d'entrées trouvées.
+	if(setSize == 1){
+		$('header .nb-entrees').text(setSize + " entrée trouvée");		
+	}else{
+		$('header .nb-entrees').text(setSize + " entrées trouvées");		
+	}
+  // On cache le loader.
+  $('#loader-entrees').hide()	
+}
+//-----------------------------------------------------------------------------//
+/*
+ * loadEntree
+ * @description : Fonction qui contruit les liens d'entrée et qui les place soit les uns après les autres soit après une entrée d'index spécifique.
+ * @param entree : objet "entree".
+ * @param position : position de l'entree dans la liste.
+ */
+function loadEntree(entree, position = null){
+	var item     = $('<div />', {
+									'class' : "entree-item",
+									}
+								);
+	var row      = $('<div />', {
+									'class' : "row",
+									}
+								);	
+	var colonne1 = $('<div />', {
+									'class' : "col-10 p-0",
+									}
+								);	
+	var url_detail = $('#resultat').attr('data-urladd');		
+	var lien     = $('<a />', {
+								  'href'    : url_detail + "/" + entree.id,
+								  'class'	  : "list-group-item list-group-item-action lien-detail-entree",
+								  'text' 	  : entree.entree_nom,
+								  'data-id' : entree.id,
+								  'data-nom': entree.entree_nom,
+								  }
+								);
+	var colonne2 = $('<div />',{
+									'class'  : "col-2 p-0 list-group-item col-suppression-entree"
+									}
+								);
+	var url_sup_entree = $('#resultat').attr('data-urlsup');						
+	var bouton   = $('<button />', {
+									'class' : "btn btn-sm btn-outline-danger bouton-suppression-entree",
+									'type' : "button",
+									'data-toggle' : "modal",
+									'data-target' : "#modal-suppression",
+									'data-href'   : url_sup_entree + "/"+entree.id,
+									'data-title'  : "Suppression de l'entrée : " + entree.entree_nom,
+									'data-body'   : "Etes-vous sûr de vouloir supprimer l'entrée "+ entree.entree_nom + "?",
+									'data-id'			: entree.id,
+									'data-type'		: "entree",
+									'data-nom'    : entree.entree_nom,
+									}
+								);
+	var icone   = $('<i />', {
+								'class' : "fas fa-times",
+									}
+								);	
+	
+	var new_entree =	item.append(row.append(colonne1.append(lien)).append(colonne2.append(bouton.append(icone))));	
+	// Si on vient de créer une entrée.
+	if(position != null){
+		// On place l'entrée dans la liste.
+		if(position == 1){
+			$('#resultat').prepend(new_entree);
+		}else{
+			$('#resultat .entree-item:nth-child('+(position-1)+')').after(new_entree);		
+		}	
+	}else{
+	// Sinon ça veut dire qu'on construit une liste, on place l'entrée à la suite de la dernière.							
+		$('#resultat').append(new_entree);
+	}
+} 
+//-----------------------------------------------------------------------------//
+/*
+ * deleteEntree
+ * @description : Supprime l'entrée du DOM.
+ * @param id : id de l'entrée
+ */
+function deleteEntree(id){	
+	$(".bouton-suppression-entree[data-id="+id+"]").parents('.entree-item').remove();
+	// On cache la vue detail de l'entrée que l'on vient de supprimer.
+	$("#entree").hide();
+	// On supprime l'entrée de l'objet qui contient les entrées.
+	if(id != null){
+		entree = all_entries[id];
+		// On supprimme l'entrée de l'objet de données.
+		delete all_entries[id];
+		// On supprimme l'objet du tableau d'entrées.
+
+		position = show_entries.indexOf(entree);
+ 		show_entries.splice(position, 1);
+
+	}
+} 
+//-----------------------------------------------------------------------------//
+/*
+ * createEntree
+ * @description : Fonction qui demande au serveur de créer l'entrée
+ * @param data : formulaire de création d'entrée.
+ */
+function createEntree(data){
+	// On récupère l'url du controleur à appeler.
+	var url = $('#form_entree').attr('action');
+	// On serialise le formulaire pour l'envoyer.
+	var form = data.serialize();
+	// Requête ajax.
+	$.ajax({
+		url      : url,
+		type  	 : 'POST',
+		dataType : 'json',
+		data  	 : form,
+	}).done(function(entree){
+		if(entree == false){
+			// Si on a pas obtenu d'entrée on affiche une modale d'erreur	    
+			$('#modal-info span').text("Cette entrée existe déjà !");
+			$('#modal-info').modal('show');
+			$('#modal-info .modal-footer').hide();	 		    
+    }else{	
+			if( Array.isArray(entree.services)){
+				entree.services = {};
+			}
+		   // On ajoute la nouvelle entrée à l'objet qui contient toute les entrées..
+			all_entries[entree.id] = entree;
+			// On va mettre à jour puis trier la liste des entrée visible.
+			show_entries.push(entree);			
+			// On trie les entrées dans ce tableau, on prend en compte les caractères non ASCII
+			show_entries = sortBy(show_entries, 'entree_nom');
+			// On recupère l'index de l'entrée.
+			position	=	show_entries.indexOf(entree)+1;	  					    
+			// On charge l'entrée créée.
+			loadEntree(entree, position);
+			// On scroll jusqu'au lien					
+			$('.passwords-list').scrollTo("#resultat .entree-item:nth-child("+position+")", 1000);		
+			// On affiche le detail de l'entrée.
+	  	loadDetailEntree(entree.id);		  									
+		}
+	}).fail(function(){
+			flashMessage("Vous n'êtes pas connecté");
+	});	 	
+ } 
+ //-----------------------------------------------------------------------------//
+/*
+ * removeEntitee
+ * @description : Encoie une requête pour supprimer une entitee.
+ * @param url : controleur à appeler
+ * @param id : id de l'entitee
+ * @param nom : nom de l'entitee
+ * @param type : type de l'entitee
+ */
+function deleteEntitee(url, id, nom, type){
+	
+	$.ajax({
+		url : url,
+		type : 'POST',
+		dataType : 'json',
+	}).done(function(data){
+		// On verifie que l'entitée a bien été supprimée.
+		if(data == true){
+			// On verifie quel type d'entitée a été supprimée et on la supprime du DOM.
+			if(type == "acces"){
+				deleteAcces(id);
+			}
+			if(type == "service"){
+				deleteService(id, nom);
+			}
+			if(type == "entree"){
+				deleteEntree(id, nom);
+			}
+		}else{
+			flashMessage("Cette entitée de type :" + type + " n'existe pas !");
+		}
+		// on ferme la modale :
+		$('#modal-suppression').modal('toggle');
+	}).fail(function(){
+			flashMessage("Vous n'êtes pas connecté");
+	});
+}
+//-----------------------------------------------------------------------------//
+/*
+ * flashMessage
+ * @description : Fonction qui affiche un message d'erreur si les requêtes n'ont pu aboutir.
+ */
+function flashMessage(message, level = 'info'){
+	$('#modal-'+level+' span').text(message);
+	$('#modal-'+level).modal('show');
+	$('#modal-'+level+' .modal-footer').hide();	 
+ }
+//-----------------------------------------------------------------------------//
+ /*
+ * loadDetailEntree
+ * @description : cache le détail précedent, affiche une icone de chargement et appelle la fonction qui construit le détail de l'entrée.
+ * @param entree_id : id de l'entrée.. 
+ */
+function loadDetailEntree(entree_id){
+	// On cache la vue de l'entrée qui a pu être affichée précedemment.
+	$('#entree').hide();	
+	// On affiche une icone de chargement.
+	$('#loader-detail').show();
+	// Modification des infos de l'entrée à afficher.
+	$('#entree').attr('data-id', entree_id);
+	// On va chercher l'entrée dans la data et on contruit l'entrée.
+	createDetailEntree(all_entries[entree_id]); 
+	
+}
+//-----------------------------------------------------------------------------// 
+/*
+ * createDetailEntree
+ * @description : Fonction qui affiche le detail de l'entrée.
+ * @param entree : objet entrée
+ */
+function createDetailEntree(entree){	
+	
+	// On enlève la classe active au précédent lien dont le detail a pu être affiché.
+	$('.active').removeClass('active');
+	// On ajoute la classe active au lien correspondant à l'entrée dont on veut voir le détail.
+	var lien_entree = $("#resultat a[data-id="+entree.id+"]");
+	lien_entree.addClass('active');
+	// Ajout de l'entrée à la variable globale.
+	detail_entree = entree;
+	// On supprime les services et les notes qui ont pu être affichés précédemment, on garde le gabarit :
+	$('.service-card:not(.service-card:first)').remove();	
+	// On cache le gabarit des services :
+	$('.service-card:first').hide();	
+	// Affichage du nom de l'entrée :
+	$('.nomEntree').text(entree.entree_nom);
+	// Passage de l'id de l'entrée dans le formulaire d'ajout d'un service :
+	$('#form_service').attr({ 'data-id' : entree.id});		
+	// affichage de la zone des notes.
+	// On vide le formulaire.
+	$('#form-notes')[0].reset();
+	
+	// Si il y a des notes on les affiches.
+	if($.type(entree.notes) !== "undefined"){
+		loadNotes(entree.id, entree.notes);
+	}		
+	// Si l'entrée possède des services :
+	if($.type(entree.services) !== "undefined"){					 
+		// On trie les services avant de les afficher.
+		var services = sortBy(entree.services, 'service_nom');
+		// Pour chaque service :
+		$.each(services, function(index, service){
+			// On affiche les services.
+			loadService(service);
+
+		});		
+	}	
+	// Affichage de la vue de l'entrée :
+	$('#entree').show();
+	// Affichage du formulaire d'ajout d'un service :
+	// $('#form_service').show();
+	$('body').addClass('vue-small-detail');
+	// On retire le loader detail.
+	$('#loader-detail').hide();
+	// On signal que l'entrée a été loadé
+	$('#entree').attr('data-load', 'true');
+
+}
+//-----------------------------------------------------------------------------//  
+/*
+ * loadNotes
+ * description : Fonction qui affiche les notes.
+ * @param notes : chaine de caractères, notes d'une entrée
+ * @param id : int, id de l'entrée.
+ */
+function loadNotes(id, notes) {	
+	// Parametrage de la carte des notes :
+	var url = $('.notes-card form').attr('data-action');
+	$('.notes-card form').attr({ action : url + "/" + id});	
+	$('#form-notes').children('span').html('saved');
+	$('#form-notes').children('button').removeClass('btn-info');
+	$('#form-notes').children('button').addClass('btn-success');
+	// On insère les notes dans la zone de texte.
+	$('.notes-card textarea').val(notes);
+	// L'action précédente n'est pas assez rapide, impose un délai avant l'ajustement de la zone de texte.
+	setTimeout(function(){return resizeNotes();}, 10);
+}
+/*
+ * resizeNotes
+ * description : Fonction qui redimensionne le textearea des notes en fonction du nombre de caractère.
+ * @param notes : chaine de caractères, notes d'une entrée
+ */
+function resizeNotes(){
+	// On ajuste la hauteure de la zone de texte en fonction de son contenu, par l'intermédiaire de la hauteur du scroll.
+	$('.notes-card textarea').css('height', '1px');
+	var height	=	(15 + $('.notes-card textarea').prop('scrollHeight'));
+	if(height < 150){
+		height = 150;
+	}
+	$('.notes-card textarea').css('height', height+"px");
+}
+//-----------------------------------------------------------------------------//  
+/*
+ * saveNotes
+ * description : Fonction qui sauvegarde les notes et met à jour la zone d'affichage
+ */
+function saveNotes(){
+	
+	var donnees = $('#form-notes').serialize();
+	$.ajax({
+		url : $('#form-notes').attr('action'),
+		type : 'POST',
+		dataType : 'json',
+		data : donnees,
+	}).done(function(entree){
+		if(entree == null){
+			flashMessage("Cette entrée n'existe pas !");
+		}else{
+			// On met à jour les notes dans l'objet entree correspondant.
+			all_entries[entree.id].notes = entree.notes;
+			// On met à jour la zone d'affichage des notes.
+			$('#form-notes').children('span').html('saved');
+			$('#form-notes').children('button').removeClass('btn-info');
+			$('#form-notes').children('button').addClass('btn-success');
+		}		
+	}).fail(function(){
+		flashMessage("Vous n'êtes pas connecté");
+	});
+}
+
+//-----------------------------------------------------------------------------//  
+/*
+ * loadService
+ * @description : Fonction qui affiche un service.
+ * @param service : objet service.
+ * @param index : position du service dans l'ordre d'affichage.
+ */
+function loadService(service, position = null){
+	
+
+  // Je clone le gabarit de la carte contenant le service :
+  var newCard = $('.service-card:first').clone();   
+	// Insertion de l'id du service dans sa carte, nécessaire pour savoir où afficher un accès lors de son ajout/modification.
+	newCard.attr('data-id', service.id);
+	// Insertion du nom du service dans la dernière card créée :
+	newCard.find("h5").text(service.service_nom);
+	// Personnalisation du bouton d'ajout d'un accès :
+	var url_addAcces = $('.service-card:first .bouton-ajout-acces').attr('data-action');
+	newCard.find(".bouton-ajout-acces").attr({
+																		'data-title'  : "Ajout d'un accès", 
+																		'data-action' : url_addAcces + "/" + service.id,
+																		'data-clef'   : "",
+																		'data-valeur' : "",		
+																	});	
+
+	// Personnalisation du bouton de suppression d'un service :
+	var url_deleteService = $('.service-card:first .bouton-suppression-service').attr('data-href');
+	newCard.find(".bouton-suppression-service").attr({
+																		'data-href'  : url_deleteService + "/" + service.id, 
+																		'data-title' : "Suppression du service : " + service.service_nom, 
+																		'data-body'  : "Etes-vous sûr de vouloir supprimer le service : " + service.service_nom + " ?",	
+																		'data-id'		 : service.id,
+																		'data-type'	 : "service",	
+																		'data-nom'   : service.service_nom,																				
+																	});	
+	if(position == null){
+		// Je l'ajoute au bon endroit dans la liste des services affichés.
+		$("#liste-services").append(newCard);	
+	}else{
+		// Je l'ajoute au bon endroit dans la liste des services affichés.
+		$("#liste-services .service-card:nth-child("+(position-1)+")").after(newCard);		
+		
+	}	
+  // J'a affiche le service créé :
+  newCard.show();
+  // Je cache le gabarit des accès :
+	newCard.find(".acces:first").hide();	
+	// Si le service possède des accès :
+	if($.type(service.access) !== "undefined") {												
+		// Pour chaque accès associé à ce service :
+		$.each(service.access, function(index_acces, acces){
+			// Affiche les Acces.
+			loadAcces(acces);
+		});														
+	}
+}
+//-----------------------------------------------------------------------------//  
+/*
+ * loadAcces
+ * description : Fonction qui affiche ou modifie un accès.
+ * @param acces : objet acces.
+ * @param modif(optional) : flag, "true" si modification d'un accès existant.
+ */
+function loadAcces(acces, modif = null){
+	// Si c'est un accès modifié on modifie le DOM en conséquence.			  			
+	if(modif == true){											
+		// Je lui donne la clef de l'accès :
+		$("#entree .service-card[data-id="+acces.service_id+"] .card-body .acces[id="+acces.id+"]").attr({id : acces.id});
+			// Insertion de la clef du champ :
+		$("#entree .service-card[data-id="+acces.service_id+"] .card-body .acces[id="+acces.id+"] label").text(acces.clef).attr({'for' : acces.id});
+		// Insertion de la valeur du champ :
+		$("#entree .service-card[data-id="+acces.service_id+"] .card-body .acces[id="+acces.id+"] input").attr({
+													value : acces.valeur,
+													id : 		acces.id,							
+													});	
+		// Personnalisation du bouton de modification d'un accès :
+		$("#entree .service-card[data-id="+acces.service_id+"] .card-body .acces[id="+acces.id+"] .bouton-modif-acces").attr({ 
+														'data-clef'   : acces.clef,
+														'data-valeur' : acces.valeur,																		
+													});											
+	// Sinon on créer un acces dans le DOM.					
+	}else{
+		// Je clone le champ pour le remplir au tour de boucle suivant :	
+		var newAcces  = $("#entree .service-card[data-id="+acces.service_id+"] .card-body .acces:first").clone();
+		// Je l'ajoute au dernier créé.
+		$("#entree .service-card[data-id="+acces.service_id+"] .card-body .acces:last").after(newAcces);	
+		// Je vide le formulaire.
+	// 	$(".service-card[data-id="+service_id+"] .acces:last form")[0].reset();
+		// Je lui donne la clef de l'accès :
+		$("#entree .service-card[data-id="+acces.service_id+"] .card-body .acces:last").attr({id : acces.id});
+			// Insertion de la clef du champ :
+		$("#entree .service-card[data-id="+acces.service_id+"] .card-body .acces:last label").text(acces.clef).attr({'for' : acces.id});
+		// Insertion de la valeur du champ :
+		$("#entree .service-card[data-id="+acces.service_id+"] .card-body .acces:last input").attr({
+																		value : acces.valeur,
+																		id : 		acces.id,							
+																		});	
+		// Personnalisation du bouton de modification d'un accès :
+		var url_editAcces = $("#entree .service-card:first .bouton-modif-acces").attr('data-action');
+		$("#entree .service-card[data-id="+acces.service_id+"] .card-body .acces:last .bouton-modif-acces").attr({ 
+																			'data-title'  : "Modification de l'accès : " + acces.clef,
+																			'data-action' : url_editAcces + "/" + acces.id,
+																			'data-clef'   : acces.clef,
+																			'data-valeur' : acces.valeur,																			
+																		});
+															
+	  // Personnalisation du bouton de suppression d'un accès :
+		var url_deleteAcces = $("#entree .service-card:first .bouton-suppression-acces").attr('data-href');
+		$("#entree .service-card[data-id="+acces.service_id+"] .card-body .acces:last .bouton-suppression-acces").attr({
+																			'data-href'  : url_deleteAcces + "/" + acces.id, 
+																			'data-title' : "Suppression de l'accès : " + acces.clef, 
+																			'data-body'  : "Etes-vous sûr de vouloir supprimer l'accès : " + acces.clef + " ?",	
+																			'data-id'		 : acces.id,
+																			'data-servid': acces.service_id,
+																			'data-type'  : "acces",
+																		});	
+		// J'affiche le champ créé :																
+		$("#entree .service-card[data-id="+acces.service_id+"] .card-body .acces:last").show();
+	}																	
+}
+//-----------------------------------------------------------------------------//  
+/*
+ * createService
+ * @description : Fonction qui demande au serveur de créer un service.
+ * @param value : formulaire de création d'un service.
+ * @param id : id de l'entrée qui contient ce service.
+ */
+function createService(data, id){
+	// On récupère l'url du controleur à appeler.
+	var url = $('#form_service').attr('action');
+	var form = data.serialize();
+	$.ajax({
+		url 		 : url +"addService/"+ id,
+		type  	 : 'POST',
+		dataType : 'json',
+		data  	 : form,
+	}).done(function(service){
+		if(service == false){
+			$('#modal-info span').text("L'entrée associée n'existe pas !");
+			$('#modal-info').modal('show');
+			$('#modal-info .modal-footer').hide();
+		}else if(service == "already"){
+			$('#modal-info span').text("Il existe déjà un service du même nom !");
+			$('#modal-info').modal('show');
+			$('#modal-info .modal-footer').hide();
+		}else{			
+			// Id de l'entrée associée au service.			
+			var entree_id = service.entree_id
+			// On ajoute le service à l'entrée correspondante dans l'objet de données.
+			all_entries[entree_id].services[service.id] = service;
+
+			var liste_services = all_entries[entree_id].services;
+			liste_services = sortBy(liste_services, 'service_nom');
+			// On récupère la position du service ; on ajoute deux car il faut prendre en compte l'index du tableau qui commence à zéro
+			// La position commence à 1 et en 1 c'est le gabarit donc le premier service sera en position deux.
+			position = liste_services.indexOf(service)+2;					
+			loadService(service, position);				
+			// On scroll jusqu'au service créé.			
+			$('.passwords-detail').scrollTo("#liste-services .service-card:nth-child("+(position)+")", 100);			
+		}
+	}).fail(function(){
+		$('#modal-set-service').modal('hide');
+		flashMessage("Vous n'êtes pas connecté");
+	});	
+} 
+//-------------------------------------------------------------------------------//
+/*
+ * setAcces
+ * description : Demande au serveur d'ajouter/modifier un acces.
+ * @param data : objet acces.
+ * @param url : lien vers le controleur à appeler.
+ */	 
+function setAcces(data, url){
+	// On serialize le formulaire pour le passer à la requête ajax.	
+	var donnees = data.serialize();
+	$.ajax({
+		url : url,
+		type : 'POST',
+		dataType : 'json',
+		data :  donnees,      
+	}).done(function(acces){ 
+	// On récupère l'id de l'entrée.
+		var id = $('#entree').attr('data-id');	  
+	if(acces == 'already'){
+		$("#modal-info span").text("Il existe déjà un accès nommé ainsi !");
+		$('#modal-info').modal('show');
+		$('#modal-info .modal-footer').hide();
+	}else if(acces == false){
+		$("#modal-info span").text("Le service associé n'existe pas !");
+		$('#modal-info').modal('show');
+		$('#modal-info .modal-footer').hide();
+	// Si on modifie un acces existant.
+	}else if(($("#entree .service-card[data-id="+acces.service_id+"] .card-body .acces").find("button[data-id="+acces.id+"]").length)>0){	
+		// On modifie l'accès dans l'objet de données.	
+		all_entries[id].services[acces.service_id].access[acces.id] = acces;
+		loadAcces(acces, true);	
+	// Si on crée un acces.
+	}else{	  
+		// On ajoute l'accès au service associé dans l'objet de données.
+		all_entries[id].services[acces.service_id].access[acces.id] = acces;
+		loadAcces(acces);
+	}
+	// On ferme la modale du formulaire d'ajout/modification d'un accès.
+	$('#modal-set-acces').modal('toggle')
+	}).fail(function(){
+		$('#modal-set-acces').modal('hide');
+		flashMessage("Vous n'êtes pas connecté");
+	});
+}
+//-----------------------------------------------------------------------------// 
+/*
+ * deleteService
+ * @description : Supprime le service du DOM et du tableau d'indexation des services.
+ * @param id : id du service
+ * @param nom : nom du service
+ */
+function deleteService(id, nom){	
+	// On supprime la carte service de la vue.
+	$(".bouton-suppression-service[data-id="+id+"]").parents('.service-card').remove();
+	if(nom != null){
+		if(id != null){
+			var entree_id = $('#entree').attr('data-id');
+			// On supprime le service du tableau de données.
+			delete all_entries[entree_id].services[id];
+		}
+	}
+}
+//-----------------------------------------------------------------------------// 
+/*
+ * deleteAcces
+ * @description : Supprime l'accès du DOM.
+ * @param id : id de l'accès
+ */
+function deleteAcces(id){
+	var bouton = $(".bouton-suppression-acces[data-id="+id+"]");
+	// On supprime le champ correspondant de la vue.
+	bouton.parents('.acces').remove();
+	if(id != null){
+		var entree_id = $('#entree').attr('data-id');
+		var service_id = bouton.attr('data-servid');
+		// On supprime l'acces du tableau de données.
+		delete all_entries[entree_id].services[service_id].access[id];
+	}
+}
+//-----------------------------------------------------------------------------// 
+/*
+ * removeDetailEntree
+ * @description : Vérifie que les notes on été sauvegardées avant de quitter la vue du detail de l'entrée.
+ */
+function removeDetailEntree(){
+	if($('#form-notes').children('span').text() == 'saved'){
+		return true;
+	}else if($('#form-notes').children('span').text() == 'unsaved'){
+		// On affiche une modale dans laquelle on demande à l'utilisateur si il veut sauvegarder les notes.
+		$('#modal-info span').text("Les notes n'ont pas été sauvegardées. Voulez-vous les sauvegarder ?");
+		$('#message-info').text('Sauvegarde des notes');
+		$('#modal-info').modal('show');
+		$('#modal-info .modal-footer').show();
+		return false;
+	}else{
+		return true;
+	}
+}

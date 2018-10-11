@@ -1,0 +1,149 @@
+body{ /* commence le body sous le header */
+	padding-bottom: 75px;	
+}
+.flashsMessages{
+	margin-top: 100px;
+}
+.bouton-retour-list{
+	display: none;
+}
+.passwords-list, .passwords-detail{
+	margin-top: 63px;
+	height: 100%;
+}
+#resultat{
+	display: none; /* mis en block temporaire */
+}
+.lien-detail-entree{
+	overflow-wrap: break-word;
+}
+.col-suppression-entree{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+#entree{
+	display: none;
+}
+.small-presse-papier{
+	color: white;
+}
+.lien-appli-nb-entree{
+	display: block;
+}
+#form_recherche{
+	display: block;
+}
+.bouton-retour-list{
+	display: none;
+}
+.passwords-list{
+	display: block !important;
+}
+.passwords-detail{
+	display: none !important;
+}
+#form_entree{
+	display: block;
+}
+#form_service{
+	display: none;
+}
+
+/* Règles éxécutées lords de l'ajout/suppression de la classe "vue-small-..." voir fichier TdbManager.js */
+.vue-small-detail .lien-appli-nb-entree{
+	display: none;
+}
+.vue-small-detail #form_recherche{
+	display: none;
+}
+.vue-small-detail .bouton-retour-list{
+	display: block;
+}
+.vue-small-detail .passwords-list{
+	display: none !important;
+}
+.vue-small-detail .passwords-detail{
+	display: block !important;
+}
+.vue-small-detail #form_entree{
+	display: none;
+}
+.vue-small-detail #form_service{
+	display: block;
+}
+
+@media screen and (max-width: 432px) {	
+	
+	.passwords-list{
+		margin-top: 99px;
+	}
+}
+@media screen and (min-width: 768px) {
+		
+	html,body{
+		height: 100vh;	
+	}
+	.passwords-list, .passwords-detail{
+		height : 79vh;
+		overflow-y: scroll;
+		position: relative;
+		margin-top: 63px;
+	}
+	.passwords-detail{
+		margin-bottom: 0px;
+		display: block !important;
+	}		
+	#form_service{
+		display: none;
+	}
+	.vue-small-detail .lien-appli-nb-entree{
+		display: block;
+	}
+	.vue-small-detail #form_recherche{
+		display: block;
+	}
+	.vue-small-detail .passwords-list{
+		display: block !important;
+	}
+	.vue-small-detail #form_entree{
+		display: block;
+	}
+	.vue-small-detail .bouton-retour-list{
+		display: none;
+	}
+
+}
+@media screen and (min-width: 992px) {	
+	.passwords-list, .passwords-detail{
+		margin-top: 63px;
+	}	
+}
+.loader{
+	display: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  width: 150px;
+  height: 150px;
+  margin: -75px 0 0 -75px;
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+}
+
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

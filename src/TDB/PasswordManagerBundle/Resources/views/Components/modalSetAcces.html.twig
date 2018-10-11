@@ -1,0 +1,44 @@
+<!-- Modal -->
+<div class="modal" id="modal-set-acces" tabindex="-1" role="dialog" aria-labelledby="ajout-modif-acces" aria-hidden="true">
+  <div class="modal-dialog">					
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">				        
+        <h4 class="modal-title" id="ajout-modif-acces">Ajout d'un Accès</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      {# <form id="form-modal-set-acces" method="POST" action="#" data-service="#"> #}
+      {{ form_start(form_acces, {'action': path('tdb_password_manager_home'), 'attr': {'data-service': '#', 'id': 'form_Acces'}}) }}	
+      	<div class="modal-body">							
+					<div class="form-group row m-auto">											
+						<div class="col-lg-6 p-1">
+							{# <input class="form-control form-control-sm" id="acces-clef" name="clef" type="text" value=""> #}
+							{{ form_widget(form_acces.clef, {'attr': {
+				      'class': 'form-control form-control-sm',
+				      'value' : ''}
+				  		}) }}
+						</div>
+						<div class="col-lg-6 p-1">
+							{# <input class="form-control form-control-sm" id="acces-valeur" name="valeur"  type="text" value=""> #}
+							{{ form_widget(form_acces.valeur, {'attr': {
+				      'class': 'form-control form-control-sm',
+				      'value' : ''}
+				      	}) }}
+						</div>											
+					</div>
+      	</div>											
+	      <div class="modal-footer">
+		      <button class="btn btn-danger" data-dismiss="modal" type="button">Annuler</button>
+{# 	        <button
+	        class="btn btn-success bouton-confirm"  
+	        name="acces" 
+	        type="submit">Valider</button> #}
+	        {{ form_widget(form_acces.ajouter, {'attr': {
+				       'class': 'btn btn-success bouton-confirm',
+				   		}}) }}
+	      </div>	   
+      {# </form>	 #}
+      {{ form_end(form_acces) }}   
+    </div>				
+  </div>
+</div><!-- fin Modal !-->

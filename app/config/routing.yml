@@ -1,0 +1,3 @@
+tdb_password_manager:
+    resource: "@TDBPasswordManagerBundle/Resources/config/routing.yml"
+    prefix:   /

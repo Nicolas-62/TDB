@@ -1,0 +1,39 @@
+{% extends "TDBPasswordManagerBundle::layout.html.twig" %}
+{% block entrees %}
+	<div class="col-md-6 passwords-list">
+		<div class="colonne">			
+			<div class="loader" id="loader-entrees"></div>
+			<div id="resultat" data-urlsup="{{ path('tdb_password_manager_deleteEntree')}}" data-urladd="{{ path('tdb_password_manager_home')}}">
+					<div class="entree-item">
+						<div class="row ">
+							<div class="col-10 p-0">
+								<a 
+									class="list-group-item list-group-item-action lien-detail-entree"
+									href="" 
+									data-id=""
+									data-nom=""
+								></a>
+							</div>
+							<div class="col-2 p-0 list-group-item col-suppression-entree">
+								<button 
+									class="btn btn-sm btn-outline-danger bouton-suppression-entree" 
+									type="button" 
+									data-toggle="modal" 
+									data-target="#modal-suppression"
+									data-href="" 
+									data-title="Suppression de l'entrée" 
+									data-body="Etes-vous sûr de vouloir supprimer l'entrée  ?"
+									data-id=""
+									data-type="entree"
+									data-nom=""
+								>
+									<i class="fas fa-times"></i>
+								</button>
+						</div>
+						</div>
+					</div>		
+			</div><!-- fin resultat !-->				
+		</div><!-- fin colonne !-->
+	</div><!-- fin Passwords-list !-->
+{% block detail %}{% endblock %}
+{% endblock %}

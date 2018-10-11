@@ -1,0 +1,9 @@
+services:
+#    tdb_password_manager.example:
+#        class: TDB\PasswordManagerBundle\Example
+#        arguments: ["@service_id", "plain_value", "%parameter%"]
+# src/OC/PlatformBundle/Resources/config/services.yml
+
+services:
+    tdb_password_manager.outils:
+        class: TDB\PasswordManagerBundle\Outils\TDBOutils

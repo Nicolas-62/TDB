@@ -1,0 +1,61 @@
+tdb_password_manager_home:
+    path:     /
+    defaults: { _controller: TDBPasswordManagerBundle:Tdb:index }
+
+
+tdb_password_manager_addEntree:
+    path:     /addEntree/
+    defaults: 
+        _controller: TDBPasswordManagerBundle:Tdb:addEntree
+
+tdb_password_manager_deleteEntree:
+    path:     /deleteEntree/{entree_id}
+    defaults: 
+        _controller: TDBPasswordManagerBundle:Tdb:deleteEntree
+        entree_id:
+    requirements:
+        entree_id: \d+
+tdb_password_manager_editNotes:
+    path:     /editNotes/{entree_id}
+    defaults: 
+        _controller: TDBPasswordManagerBundle:Tdb:editNotes
+        entree_id:
+    requirements:
+        entree_id: \d+
+tdb_password_manager_addService:
+    path:     /addService/{entree_id}
+    defaults: 
+        _controller: TDBPasswordManagerBundle:Tdb:addService
+        entree_id:
+    requirements:
+        entree_id: \d+
+
+tdb_password_manager_deleteService:
+    path:     /deleteService/{service_id}
+    defaults: 
+        _controller: TDBPasswordManagerBundle:Tdb:deleteService
+        service_id:
+    requirements:
+        service_id: \d+
+
+tdb_password_manager_addAcces:
+    path:     /addAcces/{service_id}
+    defaults: 
+        _controller: TDBPasswordManagerBundle:Tdb:addAcces
+        service_id:
+    requirements:
+        service_id: \d+
+tdb_password_manager_editAcces:
+    path:     /editAcces/{acces_id}
+    defaults: 
+        _controller: TDBPasswordManagerBundle:Tdb:editAcces
+        acces_id:
+    requirements:
+        acces_id: \d+
+tdb_password_manager_deleteAcces:
+    path:     /deleteAcces/{acces_id}
+    defaults: 
+        _controller: TDBPasswordManagerBundle:Tdb:deleteAcces
+        acces_id:
+    requirements:
+        acces_id: \d+

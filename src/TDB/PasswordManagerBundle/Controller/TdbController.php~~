@@ -1,0 +1,94 @@
+<?php
+
+namespace TDB\PasswordManagerBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use TDB\PasswordManagerBundle\Form\RechercheType;
+use TDB\PasswordManagerBundle\Entity\Entree;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use TDB\PasswordManagerBundle\Librairie\REST;
+
+
+class TdbController extends Controller
+{
+    public function indexAction(Request $request)
+    {
+        // Recupération du repo
+        $repository = $this->getDoctrine()
+        ->getManager()
+        ->getRepository('TDBPasswordManagerBundle:Entree');
+
+
+        // Création du formulaire de recherche
+        $form_recherche = $this->createForm(RechercheType::class);
+        // $form_entree = $this->createForm(new EntreeType());
+        // $form_service = $this->createForm(new ServiceType());
+        // $form_acces = $this->createForm(new AccesType());
+        // Récuperation de la requète par le formulaire
+        $form_recherche->handleRequest($request);
+
+        if ($form_recherche->isSubmitted() && $form_recherche->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $form_recherche->getData();
+            $entrees = $repository->recherche($data['recherche']);
+
+            $formatage = $this->container->get('tdb_password_manager.outils');
+            $entrees = $formatage->formatDonnees($entrees);
+            // Stockage des résultats pour réaffichage lors de l'affichage du détail d'une entrée, voir fonction etailAction
+            $session = $request->getSession();
+            $session->set('entrees', $entrees);   
+                   
+        }else{
+        	// Recuperation des entrées par méthode personnelle (tri asc)
+        	$entrees = $repository->entreeAll();
+            // Parcours les entrées.
+            $formatage = $this->container->get('tdb_password_manager.outils');
+            $entrees = $formatage->formatDonnees($entrees);
+            // dd($entrees);     
+        }
+    	if(null == $entrees){
+    		throw new NotFoundHttpException("Aucune entrée n'a été trouvé !");
+    	}       
+        if($request->isXmlHttpRequest()){
+            // $rest = new REST();
+            // $rest->renvoie($entrees);
+            dd($entrees);
+            return new JsonResponse($entrees);
+        }
+        return $this->render('TDBPasswordManagerBundle:Entree:entrees.html.twig', array(
+            'entrees' => $entrees,
+            'form_recherche' => $form_recherche->CreateView(),
+        ));
+    }
+
+    public function detailAction($id = 0, Request $request)
+    {
+    	if($id == 0){
+    		throw new NotFoundHttpException("Le numéro de l'entrée n'est pas renseigné");
+    	}
+    	// Récupération de la liste des entrées pour affichage
+    	$session = $request->getSession();
+    	$entrees = $session->get('entrees');
+		// Récupération de l'entrée
+		$em = $this->getDoctrine()->getManager();
+		$entree = $em
+		->getRepository('TDBPasswordManagerBundle:Entree')
+		->findEntreeById($id);
+        
+	    if (null === $entree) {
+	      throw new NotFoundHttpException("L'entree d'id ".$entree_id." n'existe pas.");
+	    }
+
+	    return $this->render('TDBPasswordManagerBundle:Entree:detail.html.twig', 
+	    	array('entree' => $entree, 
+	    	 	  'entrees'=> $entrees)
+	    );		
+ 
+    }
+}
+

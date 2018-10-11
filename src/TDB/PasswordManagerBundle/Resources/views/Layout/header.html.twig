@@ -1,0 +1,43 @@
+<header class="fixed-top bg-dark pt-3" >
+	<div class="container">
+		<div class="row">
+			<div class="col-md lien-appli-nb-entree">
+				  <div class="form-row">
+				    <div class="col col-auto mr-2">
+				      <h4><a class="titre-mdp text-white" href="{{ path('tdb_password_manager_home') }}">TDB</a></h4>
+				    </div>
+				    <div class="col col-auto">
+				      <h4 class="text-white nb-entrees"></h4>
+				    </div>
+				  </div>
+			</div>
+			<div class="col-md">
+				{{ form_start(form_recherche, {'action': path('tdb_password_manager_home'), 'attr' : {'id' : 'form_recherche'}}) }}
+				  <div class="form-row">
+				    <div class="col">
+				      {{ form_widget(form_recherche.recherche, {'attr': 
+				      {'class': 'form-control form-control-sm',
+				  		'placeholder' : 'rechercher'},
+				  		}) }}
+				    </div>
+				    <div class="col col-auto">
+				     	{{ form_widget(form_recherche.envoyer, {'attr': {
+				       'class': 'btn btn-sm btn-success',
+				   		}}) }}
+				    </div>
+				    <div class="col col-auto">
+				      <button class="btn btn-sm btn-danger" id="bouton-annul-recherche" name="bouton-annul-recherche" type="submit">Annuler</button>
+				    </div>
+				  </div>
+				 {{ form_end(form_recherche) }}
+				<form class="bouton-retour-list">
+					<a class="btn btn-sm btn-primary btn-block text-white" 
+						 id="bouton-retour-recherche"
+						 role="button"
+						 >Retour</a>
+				</form>
+			</div><!-- fin col-md !-->
+		</div><!-- fin row !-->
+	</div><!-- fin container !-->
+</header>
+

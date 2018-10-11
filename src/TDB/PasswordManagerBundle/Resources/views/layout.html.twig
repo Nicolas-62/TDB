@@ -1,0 +1,35 @@
+
+<html lang="fr">
+	<!-- ! Head -->
+    {{ include("TDBPasswordManagerBundle:Layout:head.html.twig") }}
+	<body>
+		<!-- ! Header -->
+		{{ include("TDBPasswordManagerBundle:Layout:header.html.twig") }}
+		
+	    <div>
+			{# On affiche tous les messages flash dont le nom est « info » #}
+			{% for message in app.session.flashbag.get('info') %}
+				<div class="flashsMessages alert alert-warning">{{ message }}</div>
+			{% endfor %}
+	    </div>
+		<div id="modals">
+			{{ include("TDBPasswordManagerBundle:Components:modalSuppressionEntitee.html.twig") }}
+			{{ include("TDBPasswordManagerBundle:Components:modalSetAcces.html.twig") }}
+			{{ include("TDBPasswordManagerBundle:Components:modalInfo.html.twig") }}
+		</div>
+		
+		<!-- ! Content -->
+		<div class="container container-page">
+			<div class="row">
+				{% block entrees %}{% endblock %}
+			</div>
+		</div>
+		
+		<!-- ! Footer -->
+		{{ include("TDBPasswordManagerBundle:Layout:footer.html.twig") }}
+    
+		<!-- ! Scripts -->
+		{{ include("TDBPasswordManagerBundle:Layout:scripts.html.twig") }}
+		
+	</body>
+</html>
